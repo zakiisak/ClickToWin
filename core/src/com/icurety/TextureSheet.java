@@ -1,18 +1,22 @@
 package com.icurety;
 
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class TextureSheet {
 
-    private Texture sheet;
-    private float indexSize;
+    private final Pixmap map;
+    private final Texture sheet;
+    public int indexSize;
     private final int indexLineWidth;
 
     public TextureSheet(FileHandle path, int indexSize)
     {
-        sheet = new Texture(path);
+        map = new Pixmap(path);
+        sheet = new Texture(map);
         sheet.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         sheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         this.indexSize = indexSize;
@@ -34,5 +38,17 @@ public class TextureSheet {
         batch.draw(sheet, x, y, width, height, u, v2, u2, v);
     }
 
+    public Texture getTexture() {
+        return sheet;
+    }
+    public Pixmap getPixMap() {
+        return map;
+    }
 
+    public int getPixel(int iconIndex, int x, int y)
+    {
+        int startX = iconIndex % indexLineWidth * indexSize;
+        int startY = iconIndex / indexLineWidth * indexSize;
+        return map.getPixel(startX + x, startY + y);
+    }
 }

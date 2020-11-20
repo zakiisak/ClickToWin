@@ -30,6 +30,7 @@ public class ClickToWin extends ApplicationAdapter {
 	TextureSheet icons;
 
 	List<Particle> particles = new ArrayList<Particle>();
+	private int enemyIndex = 0;
 	Enemy currentEnemy;
 	private BigInteger damage = BigInteger.valueOf(5);
 
@@ -44,7 +45,7 @@ public class ClickToWin extends ApplicationAdapter {
 
 
 
-		currentEnemy = Enemy.ENEMIES.get(0);
+		currentEnemy = Enemy.ENEMIES.get(0).cpy();
 
 		batch = new SpriteBatch();
 		img = new Texture("badlogic.jpg");
@@ -67,7 +68,13 @@ public class ClickToWin extends ApplicationAdapter {
 		{
 			currentEnemy.tickAndRender(batch, icons);
 			if(currentEnemy.dead)
+			{
 				currentEnemy = null;
+				enemyIndex++;
+				if(enemyIndex >= Enemy.ENEMIES.size())
+					enemyIndex = 0;
+				currentEnemy = Enemy.ENEMIES.get(enemyIndex).cpy();
+			}
 		}
 
 		for(int i = 0; i < particles.size(); i++)
@@ -93,8 +100,8 @@ public class ClickToWin extends ApplicationAdapter {
 		screenY = Gdx.graphics.getHeight() - screenY;
 		System.out.println("screenTouch");
 		int count = 90 + (int) (Math.random() * 100D);
-		final float dampFactor = 0.98f;
-		final float maxSpeed = 5.0f;
+		final float dampFactor = 0.70f;
+		final float maxSpeed = 100.0f;
 		for(int i = 0; i < count; i++)
 		{
 			final float degrees = (float) Math.random() * 360;
@@ -105,7 +112,7 @@ public class ClickToWin extends ApplicationAdapter {
 
 		if(currentEnemy != null)
 		{
-			if(currentEnemy.checkClick(screenX, screenY))
+			if(currentEnemy.checkClick(icons, screenX, screenY))
 			{
 				currentEnemy.damage(damage);
 			}
