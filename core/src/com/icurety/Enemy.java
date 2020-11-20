@@ -30,8 +30,6 @@ public class Enemy {
     private float x, y;
     public boolean dead = false;
 
-    private float screenX, screenY;
-
     private int icon;
     private BigInteger hp, startHp;
     private Color overlayColor = Color.WHITE;
@@ -45,7 +43,7 @@ public class Enemy {
 
     public void tickAndRender(SpriteBatch batch, TextureSheet sheet)
     {
-        overlayColor = overlayColor.lerp(1, 1, 1, 1, 0.01f);
+        overlayColor = overlayColor.lerp(1, 1, 1, 1, 0.05f);
 
         x = Gdx.graphics.getWidth() / 2 - ENEMY_SIZE / 2;
         y = Gdx.graphics.getHeight() / 2 - ENEMY_SIZE / 2;
@@ -63,8 +61,6 @@ public class Enemy {
         batch.setColor(1.0f - hpPercentage, hpPercentage, 0.5f, 1);
         sheet.drawIndex(batch, 14, barX, barY, barWidth * hpPercentage, barHeight);
         batch.setColor(Color.WHITE);
-
-        sheet.drawIndex(batch, 14, screenX, screenY, 10, 10);
     }
 
     public void damage(BigInteger amount){
@@ -95,8 +91,6 @@ public class Enemy {
 
     public boolean checkClick(TextureSheet sheet, float clickX, float clickY)
     {
-        this.screenX = clickX;
-        this.screenY = clickY;
         if(clickX >= x && clickY >= y && clickX < x + ENEMY_SIZE && y < y + ENEMY_SIZE)
         {
             return checkPixelCollision(sheet, clickX, clickY);
