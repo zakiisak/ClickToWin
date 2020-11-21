@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,14 +42,14 @@ public class Enemy {
         this.startHp = hp;
     }
 
-    public void tickAndRender(SpriteBatch batch, TextureSheet sheet)
+    public void tickAndRender(SpriteBatch batch)
     {
         overlayColor = overlayColor.lerp(1, 1, 1, 1, 0.05f);
 
         x = Gdx.graphics.getWidth() / 2 - ENEMY_SIZE / 2;
         y = Gdx.graphics.getHeight() / 2 - ENEMY_SIZE / 2;
         batch.setColor(overlayColor);
-        sheet.drawIndex(batch, icon, x, y, ENEMY_SIZE, ENEMY_SIZE);
+        Icons.draw(batch, icon, x, y, ENEMY_SIZE, ENEMY_SIZE);
 
         //hp bar
         final float barWidth = ENEMY_SIZE * 1.3f;
@@ -56,10 +57,10 @@ public class Enemy {
         final float barX = x + ENEMY_SIZE / 2 -barWidth / 2;
         final float barY = + ENEMY_SIZE * 0.8f;
         batch.setColor(0, 0, 0, 0.6f);
-        sheet.drawIndex(batch, 14, barX, barY, barWidth, barHeight);
-        final float hpPercentage = new BigDecimal(hp).divide(new BigDecimal(startHp)).floatValue();
+        Icons.drawSolid(batch, barX, barY, barWidth, barHeight);
+        final float hpPercentage = new BigDecimal(hp).divide(new BigDecimal(startHp), 2, RoundingMode.HALF_UP).floatValue();
         batch.setColor(1.0f - hpPercentage, hpPercentage, 0.5f, 1);
-        sheet.drawIndex(batch, 14, barX, barY, barWidth * hpPercentage, barHeight);
+        Icons.drawSolid(batch, barX, barY, barWidth * hpPercentage, barHeight);
         batch.setColor(Color.WHITE);
     }
 
@@ -72,8 +73,9 @@ public class Enemy {
         }
     }
 
-    private boolean checkPixelCollision(TextureSheet sheet, float clickXOnScreen, float clickYOnScreen)
+    private boolean checkPixelCollision(float clickXOnScreen, float clickYOnScreen)
     {
+        TextureSheet sheet = Icons.getSheet();
         clickYOnScreen = Gdx.graphics.getHeight() - clickYOnScreen;
         Pixmap map = sheet.getPixMap();
         int relativeX = (int) (clickXOnScreen - x);
@@ -89,11 +91,11 @@ public class Enemy {
         return false;
     }
 
-    public boolean checkClick(TextureSheet sheet, float clickX, float clickY)
+    public boolean checkClick(float clickX, float clickY)
     {
         if(clickX >= x && clickY >= y && clickX < x + ENEMY_SIZE && y < y + ENEMY_SIZE)
         {
-            return checkPixelCollision(sheet, clickX, clickY);
+            return checkPixelCollision(clickX, clickY);
         }
         return false;
     }

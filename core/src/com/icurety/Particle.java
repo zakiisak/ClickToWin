@@ -3,14 +3,13 @@ package com.icurety;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-public class Particle {
+public class Particle extends Entity {
 
     public static final int PARTICLE_INDEX = 15;
 
     private Color color;
-    private float x, y, velX, velY, dampFactor;
+    private float velX, velY, dampFactor;
     private float size = 32;
-    public boolean dead;
 
     public Particle(float x, float y, Color color, float velX, float velY, float dampFactor)
     {
@@ -23,7 +22,7 @@ public class Particle {
     }
 
 
-    public void tickAndRender(SpriteBatch batch, TextureSheet sheet)
+    public void tickAndRender(ClickToWin ctw, SpriteBatch batch)
     {
         x += velX;
         y += velY;
@@ -37,7 +36,7 @@ public class Particle {
 
         Color c = batch.getColor().cpy();
         batch.setColor(color);
-        sheet.drawIndex(batch, PARTICLE_INDEX, x - size / 2, y - size / 2, size, size);
+        Icons.draw(batch, PARTICLE_INDEX, x - size / 2, y - size / 2, size, size);
         batch.setColor(c);
 
     }
