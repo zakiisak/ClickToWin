@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.JsonReader;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -103,6 +104,23 @@ public class Enemy {
     public Enemy cpy()
     {
         return new Enemy(icon, startHp);
+    }
+
+    public Enemy cpyWithCurrentHp()
+    {
+        Enemy enemy = new Enemy(icon, startHp);
+        enemy.hp = hp;
+        return enemy;
+    }
+
+    public float getX()
+    {
+        return x;
+    }
+
+    public float getY()
+    {
+        return y;
     }
 
 }

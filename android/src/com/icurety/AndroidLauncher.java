@@ -41,7 +41,6 @@ public class AndroidLauncher extends AndroidApplication {
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -50,7 +49,8 @@ public class AndroidLauncher extends AndroidApplication {
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 
 		final AndroidAd ad = new AndroidAd(null, this);
-		ctw = new ClickToWin(ad);
+		ctw = new ClickToWin(new AndroidSaveSystem(this), ad);
+		Log.i("INFO", "THIS IS SOME VERY IMPORTANT CLASS:_ HERE IT IS: " + this.getPreferences(MODE_PRIVATE));
 		ad.ctw = ctw;
 		View gameView = initializeForView(ctw, config);
 

@@ -17,7 +17,7 @@ public class PowerUp extends Entity {
     {
         x = 300;
         y = (float) Gdx.graphics.getHeight() - (float) Gdx.graphics.getHeight() * 0.25f;
-        ctw.damage = ctw.damage.add(BigInteger.valueOf(5));
+        ctw.updateDamage(ctw.getDamage().add(BigInteger.valueOf(5)));
     }
 
 
