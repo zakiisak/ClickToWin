@@ -89,4 +89,9 @@ task run(type: Exec) {
     commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.icurety/com.icurety.AndroidLauncher'
 }
 
+dependencies {
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+}
+
 eclipse.project.name = appName + "-android"

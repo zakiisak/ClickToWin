@@ -1,5 +1,6 @@
 package com.icurety;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -36,7 +37,11 @@ public class AndroidLauncher extends AndroidApplication {
 	private ClickToWin ctw;
 	private AdView adView;
 
-	RewardedAd rewardedAd;
+	private void startWinActivity()
+	{
+		startActivity(new Intent(this, WinPopup.class));
+	}
+
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
@@ -49,7 +54,18 @@ public class AndroidLauncher extends AndroidApplication {
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 
 		final AndroidAd ad = new AndroidAd(null, this);
-		ctw = new ClickToWin(new AndroidSaveSystem(this), ad);
+		ctw = new ClickToWin(new AndroidSaveSystem(this), ad, new Runnable() {
+			//on win
+			@Override
+			public void run() {
+				AndroidLauncher.this.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						startWinActivity();
+					}
+				});
+			}
+		});
 		Log.i("INFO", "THIS IS SOME VERY IMPORTANT CLASS:_ HERE IT IS: " + this.getPreferences(MODE_PRIVATE));
 		ad.ctw = ctw;
 		View gameView = initializeForView(ctw, config);

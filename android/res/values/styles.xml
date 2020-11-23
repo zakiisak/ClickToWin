@@ -9,4 +9,9 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
+    <style name="WinPopup">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowCloseOnTouchOutside">true</item>
+    </style>
+
 </resources>

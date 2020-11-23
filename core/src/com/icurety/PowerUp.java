@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class PowerUp extends Entity {
@@ -17,7 +18,17 @@ public class PowerUp extends Entity {
     {
         x = 300;
         y = (float) Gdx.graphics.getHeight() - (float) Gdx.graphics.getHeight() * 0.25f;
-        ctw.updateDamage(ctw.getDamage().add(BigInteger.valueOf(5)));
+
+        BigDecimal decimal = new BigDecimal(ctw.getDamage());
+
+        ctw.updateDamage(formular(ctw.getDamage()));
+    }
+
+
+    private static BigInteger formular(BigInteger old)
+    {
+        return old.multiply(BigInteger.valueOf(5));
+        //old.add(old.add(old.divide(BigInteger.valueOf(5))));
     }
 
 

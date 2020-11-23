@@ -51,4 +51,9 @@ public class TextureSheet {
         int startY = iconIndex / indexLineWidth * indexSize;
         return map.getPixel(startX + x, startY + y);
     }
+
+    public int getTextureCount()
+    {
+        return sheet.getWidth() / indexSize * sheet.getHeight() / indexSize;
+    }
 }

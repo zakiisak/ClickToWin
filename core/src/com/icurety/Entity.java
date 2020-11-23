@@ -6,6 +6,12 @@ public class Entity {
 
     public float x, y;
     public boolean dead;
+    protected Runnable deathCallback;
+
+    public void setDeathCallback(Runnable runnable)
+    {
+        this.deathCallback = runnable;
+    }
 
 
     public void tickAndRender(ClickToWin ctw, SpriteBatch batch)  {}

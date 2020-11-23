@@ -1,5 +1,6 @@
 package com.icurety;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -34,10 +35,16 @@ public class Particle extends Entity {
             dead = true;
         }
 
+        if(x < -200 || y < -200 || x > Gdx.graphics.getWidth() + 200 || y > Gdx.graphics.getHeight() + 200)
+        {
+            dead = true;
+        }
+
         Color c = batch.getColor().cpy();
         batch.setColor(color);
         Icons.draw(batch, PARTICLE_INDEX, x - size / 2, y - size / 2, size, size);
         batch.setColor(c);
+
 
     }
 

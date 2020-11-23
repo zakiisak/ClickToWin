@@ -9,6 +9,7 @@ public abstract class SaveSystem {
     private Json json = new Json();
     public static final String KEY_DAMAGE = "damage";
     public static final String KEY_ENEMY = "enemy";
+    public static final String KEY_CLICK_COUNT = "clickCount";
 
     public abstract void save(String key, Object value);
     public abstract String getString(String key);
