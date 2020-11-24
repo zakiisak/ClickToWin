@@ -8,6 +8,12 @@ public class Entity {
     public boolean dead;
     protected Runnable deathCallback;
 
+    public void onDeath(ClickToWin ctw)
+    {
+        if(deathCallback != null)
+            deathCallback.run();
+    }
+
     public void setDeathCallback(Runnable runnable)
     {
         this.deathCallback = runnable;

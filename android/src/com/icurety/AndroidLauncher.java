@@ -1,5 +1,7 @@
 package com.icurety;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -39,7 +41,22 @@ public class AndroidLauncher extends AndroidApplication {
 
 	private void startWinActivity()
 	{
-		startActivity(new Intent(this, WinPopup.class));
+		AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+		builder1.setMessage("You won the game!!");
+		builder1.setCancelable(false);
+
+		builder1.setNeutralButton(
+				"Ok!",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						dialog.cancel();
+						ctw.updateEnemy();
+					}
+				});
+
+		AlertDialog alert11 = builder1.create();
+		alert11.show();
+		//startActivity(new Intent(this, WinPopup.class));
 	}
 
 

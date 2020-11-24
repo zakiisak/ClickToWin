@@ -23,7 +23,7 @@ import sun.rmi.runtime.Log;
 
 public class ClickToWin extends ApplicationAdapter {
 	private SpriteBatch batch;
-	private Texture background;
+	private Texture background_stars, background_lava;
 	private TextureSheet explosion3, explosion4;
 
 	private BitmapFont.BitmapFontData fontData;
@@ -31,20 +31,22 @@ public class ClickToWin extends ApplicationAdapter {
 	private BitmapFont font, damageFont, dpsFont;
 	private AdManager adManager;
 	private boolean paused = false;
-	private int enemyIndex = 0;
+	private int enemyIndex = 92;
 	private Enemy currentEnemy;
-	private BigInteger damage = new BigInteger("12345678931234567890");
+	private BigInteger damage = new BigInteger("52345678907765474675234565476457657434567890876543456789876543456789654323456");
 	protected List<Entity> entities = new ArrayList<Entity>();
 	private SaveSystem saveSystem;
 	private SoundSystem soundSystem;
+
+	private boolean createdGraphics = false;
 
 	private BigInteger clickCount = BigInteger.ZERO;
 	private Runnable onWinAction;
 
 	//dps varaibles
-	private BigInteger dps = BigInteger.ZERO;
-	private BigInteger dpsCounter = BigInteger.ZERO;
-	private long dpsLastSecond;
+	private BigInteger tps = BigInteger.ZERO;
+	private BigInteger tpsCounter = BigInteger.ZERO;
+	private long tpsLastSecond;
 
 	public ClickToWin(SaveSystem saveSystem, AdManager adManager, Runnable onWinAction)
 	{
@@ -78,18 +80,25 @@ public class ClickToWin extends ApplicationAdapter {
 		soundSystem.init();
 
 		batch = new SpriteBatch();
-		background = new Texture("res/starBackground.jpeg");
+		background_stars = new Texture("res/starBackground.jpeg");
+		background_lava = new Texture("res/lava.jpg");
 		explosion3 = new TextureSheet(Gdx.files.internal("res/explosion 3.png"),512);
 		explosion4 = new TextureSheet(Gdx.files.internal("res/explosion 4.png"), 512);
+		createdGraphics = true;
 	}
 
 	private void disposeGraphics()
 	{
-		background.dispose();
-		font.dispose();
-		damageFont.dispose();
-		dpsFont.dispose();
-		batch.dispose();
+		if(createdGraphics) {
+			background_stars.dispose();
+			background_lava.dispose();
+			font.dispose();
+			damageFont.dispose();
+			dpsFont.dispose();
+			batch.dispose();
+			Icons.dispose();
+			createdGraphics = false;
+		}
 	}
 
 	@Override
@@ -121,16 +130,30 @@ public class ClickToWin extends ApplicationAdapter {
 		}
 		if(saveSystem.keyExists(SaveSystem.KEY_ENEMY))
 		{
-			currentEnemy = saveSystem.getFromJson(SaveSystem.KEY_ENEMY, Enemy.class).cpyWithCurrentHp();
+			currentEnemy = saveSystem.getEnemy(SaveSystem.KEY_ENEMY);
+			enemyIndex = SaveSystem.getEnemyOutIndex;
 		}
 		else {
-			currentEnemy = Enemy.ENEMIES.get(0).cpy();
+			currentEnemy = Enemy.get(enemyIndex/*Defaults to 0*/).cpy();
+		}
+		if(saveSystem.keyExists(SaveSystem.KEY_ITEM_MEDAL))
+		{
+			entities.add(new ItemPopup(this, ItemPopup.ITEM_GOLD_MEDAL, true));
+		}
+		if(saveSystem.keyExists(SaveSystem.KEY_ITEM_SUN))
+		{
+			entities.add(new ItemPopup(this, ItemPopup.ITEM_SUN, true));
 		}
 	}
 
 	private void saveDamage() { saveSystem.save(SaveSystem.KEY_DAMAGE, damage); }
-	private void saveEnemy() { saveSystem.save(SaveSystem.KEY_ENEMY, currentEnemy); }
+	private void saveEnemy() { saveSystem.saveEnemy(SaveSystem.KEY_ENEMY, enemyIndex, currentEnemy); }
 	private void saveClickCount() {saveSystem.save(SaveSystem.KEY_CLICK_COUNT, clickCount);}
+
+	//these two are run from the enemy class
+	public void saveGoldMedal() {saveSystem.save(SaveSystem.KEY_ITEM_MEDAL, true);}
+	public void saveSun() {saveSystem.save(SaveSystem.KEY_ITEM_SUN, true);}
+
 	private void save()
 	{
 		saveDamage();
@@ -151,19 +174,16 @@ public class ClickToWin extends ApplicationAdapter {
 		return damage;
 	}
 
-	private void updateEnemy()
+	public void win()
 	{
-		currentEnemy = null;
+		onWinAction.run();
+	}
+
+	public void updateEnemy()
+	{
 		enemyIndex++;
-		if (enemyIndex >= Enemy.ENEMIES.size())
-		{
-			onWinAction.run();
-		}
-		else {
-			currentEnemy = Enemy.ENEMIES.get(enemyIndex).cpy();
-			//save
-			saveEnemy();
-		}
+		currentEnemy = Enemy.get(enemyIndex);
+		saveEnemy();
 	}
 
 	private void createExplosion(Runnable onFinished)
@@ -180,11 +200,11 @@ public class ClickToWin extends ApplicationAdapter {
 	@Override
 	public void render () {
 		//update dpsCounter
-		if(System.currentTimeMillis() - dpsLastSecond > 1000)
+		if(System.currentTimeMillis() - tpsLastSecond > 1000)
 		{
-			dpsLastSecond = System.currentTimeMillis();
-			dps = dpsCounter;
-			dpsCounter = BigInteger.ZERO;
+			tpsLastSecond = System.currentTimeMillis();
+			tps = tpsCounter;
+			tpsCounter = BigInteger.ZERO;
 		}
 
 		//batch.getTransformMatrix().rotate(new Vector3(0, 0, 1), 1);
@@ -192,20 +212,29 @@ public class ClickToWin extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		if(paused == false) {
 			batch.begin();
-			batch.draw(background, 0, 0, background.getWidth(), background.getHeight());
+			batch.draw(enemyIndex % Enemy.getEnemyCount() >= 94 ? background_lava : background_stars, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 			batch.setColor(Color.WHITE);
 			//batch.draw(img, Gdx.graphics.getWidth() / 2 - img.getWidth() / 2, Gdx.graphics.getHeight() / 2 - img.getHeight() / 2);
 
 			if (currentEnemy != null) {
 				currentEnemy.tickAndRender(batch);
 				if (currentEnemy.dead) {
+					Runnable postExplosionUpdateEnemy = null;
+					if(currentEnemy.hasDeathEvent())
+					{
+						currentEnemy.callDeathEvent(this);
+					}
+					else
+					{
+						postExplosionUpdateEnemy = new Runnable() {
+							@Override
+							public void run() {
+								updateEnemy();
+							}
+						};
+					}
 					currentEnemy = null;
-					createExplosion(new Runnable() {
-						@Override
-						public void run() {
-							updateEnemy();
-						}
-					});
+					createExplosion(postExplosionUpdateEnemy);
 				}
 			}
 
@@ -213,8 +242,7 @@ public class ClickToWin extends ApplicationAdapter {
 				Entity e = entities.get(i);
 				e.tickAndRender(this, batch);
 				if (e.dead) {
-					if(e.deathCallback != null)
-						e.deathCallback.run();
+					e.onDeath(this);
 					entities.remove(i--);
 				}
 			}
@@ -240,7 +268,7 @@ public class ClickToWin extends ApplicationAdapter {
 
 			//draw dps
 			float dpsStringWidth = 0;
-			String dpsString = "dps: " + formatBigInteger(dps);
+			String dpsString = "tps: " + formatBigInteger(tps);
 			dpsFont.setColor(1,1, 1, 1);
 			for(int i = 0; i < dpsString.length(); i++)
 				dpsStringWidth += dpsFontData.getGlyph(dpsString.charAt(i)).xadvance;
@@ -268,11 +296,103 @@ public class ClickToWin extends ApplicationAdapter {
 		entities.add(new PowerUp(this));
 	}
 
+	private void spawnRingsOld(float screenX, float screenY)
+	{
+
+		int count1 = Math.min(Math.abs(damage.intValue()), 360);
+		float degrees = (float) (Math.random() * 360D);
+		final float dampFactor = 0.70f;
+		final float speed = 100.0f;
+		System.out.println("Count1: " + count1);
+		for(int i = 0; i < count1; i++)
+		{
+			degrees += (360f / (float) count1);
+			System.out.println(degrees);
+			final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed);
+			final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed);
+			float rnd = (float) Math.random();
+			float val = 0.86f + rnd * 0.14f;
+			entities.add(new Particle(screenX, screenY, new Color(val, val, val, 1), dx, dy, dampFactor));
+		}
+		degrees %= 360;
+		int count2 = Math.min(Math.abs(damage.divide(BigInteger.valueOf(1000)).intValue()), 360);
+		if(count2 > 0) {
+			degrees = (float) (Math.random() * 360D);
+			if (count2 >= 0 && count2 < 5) count2 = 5;
+
+			for (int i = 0; i < count2; i++) {
+				degrees += (360f / (float) count2);
+				final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.8f);
+				final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.8f);
+				entities.add(new Particle(screenX, screenY, new Color(0.5f, 0.5f, 1f, 1), dx, dy, dampFactor));
+			}
+			degrees %= 360;
+
+			int count3 = Math.min(Math.abs(damage.divide(new BigInteger("1000000")).intValue()), 360);
+			if(count3 > 0) {
+				degrees = (float) (Math.random() * 360D);
+				if (count3 >= 0 && count3 < 5) count3 = 5;
+
+				for (int i = 0; i < count3; i++) {
+					degrees += (360f / (float) count3);
+					final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.6f);
+					final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.6f);
+					entities.add(new Particle(screenX, screenY, new Color(0.5f, 1, 0.5f, 1), dx, dy, dampFactor));
+				}
+				degrees %= 360;
+
+
+				int count4 = Math.min(Math.abs(damage.divide(new BigInteger("1000000000")).intValue()), 360);
+				if(count4 > 0) {
+					degrees = (float) (Math.random() * 360D);
+					if (count4 > 0 && count4 < 5) count4 = 5;
+
+					for (int i = 0; i < count4; i++) {
+						degrees += (360f / (float) count4);
+						final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.4f);
+						final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.4f);
+						entities.add(new Particle(screenX, screenY, new Color(1f, 0.5f, 0.5f, 1), dx, dy, dampFactor));
+					}
+					degrees %= 360;
+
+
+					int count6 = Math.min(Math.abs(damage.divide(new BigInteger("1000000000000000")).intValue()), 360);
+					if(count6 > 0) {
+						degrees = (float) (Math.random() * 360D);
+						if (count6 >= 0 && count6 < 5) count6 = 5;
+
+						for (int i = 0; i < count6; i++) {
+							degrees += (360f / (float) count6);
+							final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 1.5f);
+							final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 1.5f);
+							entities.add(new Particle(screenX, screenY, new Color(1, 1, 1, 1).fromHsv(degrees % 360, 0.75f, 1.0f), dx, dy, dampFactor));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void spawnRings(float screenX, float screenY)
+	{
+		int count1 = Math.min(Math.abs(damage.intValue()), 360);
+		float degrees = (float) (Math.random() * 360D);
+		final float dampFactor = 0.70f;
+		final float speed = 100.0f;
+		for(int i = 0; i < count1; i++)
+		{
+			degrees += (360f / (float) count1);
+			final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed);
+			final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed);
+			float rnd = (float) Math.random();
+			float val = 0.86f + rnd * 0.14f;
+			entities.add(new Particle(screenX, screenY, new Color(val, val, val, 1), dx, dy, dampFactor));
+		}
+	}
+
 	public void onTouch(float screenX, float screenY)
 	{
 		screenY = Gdx.graphics.getHeight() - screenY;
-		System.out.println("screenTouch");
-		onWinAction.run();
 
 		if(currentEnemy != null)
 		{
@@ -280,76 +400,14 @@ public class ClickToWin extends ApplicationAdapter {
 			//if(currentEnemy.checkClick(screenX, screenY))
 			//{
 				currentEnemy.damage(damage);
-				dpsCounter = dpsCounter.add(damage);
+				tpsCounter = tpsCounter.add(BigInteger.ONE);
 				soundSystem.playDamage(currentEnemy.getHpPercentage());
 				entities.add(new DamageNumber(damage, damageFont, screenX, screenY));
 				clickCount = clickCount.add(BigInteger.ONE);
-				saveSystem.save(SaveSystem.KEY_CLICK_COUNT, clickCount);
+				//saveSystem.save(SaveSystem.KEY_CLICK_COUNT, clickCount);
 
 				//spawn particles
-
-				int count1 = Math.min(Math.abs(damage.intValue()), 360);
-				float degrees = (float) (Math.random() * 360D);
-				final float dampFactor = 0.70f;
-				final float speed = 100.0f;
-				for(int i = 0; i < count1; i++)
-				{
-					degrees += (360 / count1) % 360;
-					final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed);
-					final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed);
-					float rnd = (float) Math.random();
-					float val = 0.86f + rnd * 0.14f;
-					entities.add(new Particle(screenX, screenY, new Color(val, val, val, 1), dx, dy, dampFactor));
-				}
-				int count2 = Math.min(Math.abs(damage.divide(BigInteger.valueOf(1000)).intValue()), 360);
-				if(count2 > 0) {
-					if (count2 >= 0 && count2 < 5) count2 = 5;
-
-					for (int i = 0; i < count2; i++) {
-						degrees += (360 / count2) % 360;
-						final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.8f);
-						final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.8f);
-						entities.add(new Particle(screenX, screenY, new Color(0.5f, 0.5f, 1f, 1), dx, dy, dampFactor));
-					}
-
-					int count3 = Math.min(Math.abs(damage.divide(new BigInteger("1000000")).intValue()), 360);
-					if(count3 > 0) {
-						if (count3 >= 0 && count3 < 5) count3 = 5;
-
-						for (int i = 0; i < count3; i++) {
-							degrees += (360 / count3) % 360;
-							final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.6f);
-							final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.6f);
-							entities.add(new Particle(screenX, screenY, new Color(0.5f, 1, 0.5f, 1), dx, dy, dampFactor));
-						}
-
-
-						int count4 = Math.min(Math.abs(damage.divide(new BigInteger("1000000000")).intValue()), 360);
-						if(count4 > 0) {
-							if (count4 > 0 && count4 < 5) count4 = 5;
-
-							for (int i = 0; i < count4; i++) {
-								degrees += (360 / count4) % 360;
-								final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.4f);
-								final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.4f);
-								entities.add(new Particle(screenX, screenY, new Color(1f, 0.5f, 0.5f, 1), dx, dy, dampFactor));
-							}
-
-
-							int count6 = Math.min(Math.abs(damage.divide(new BigInteger("1000000000000000")).intValue()), 360);
-							if(count6 > 0) {
-								if (count6 >= 0 && count6 < 5) count6 = 5;
-
-								for (int i = 0; i < count6; i++) {
-									degrees += (360 / count6) % 360;
-									final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 1.5f);
-									final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 1.5f);
-									entities.add(new Particle(screenX, screenY, new Color(1, 1, 1, 1).fromHsv(degrees % 360, 0.75f, 1.0f), dx, dy, dampFactor));
-								}
-							}
-						}
-					}
-				}
+				spawnRings(screenX, screenY);
 			//}
 		}
 	}
@@ -369,7 +427,23 @@ public class ClickToWin extends ApplicationAdapter {
 	{
 		BigDecimal decimal = new BigDecimal(number);
 		String result = "";
-		if(number.compareTo(new BigInteger("1000000000000000000000")) > 0)
+		if(number.compareTo(new BigInteger("10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")) > 0)
+		{
+			return decimal.divide(new BigDecimal("10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"), 3, RoundingMode.CEILING).stripTrailingZeros().toPlainString() + "G";
+		}
+		else if(number.compareTo(new BigInteger("1000000000000000000000000000000000")) > 0)
+		{
+			return decimal.divide(new BigDecimal("1000000000000000000000000000000000"), 3, RoundingMode.CEILING).stripTrailingZeros().toPlainString() + "D";
+		}
+		else if(number.compareTo(new BigInteger("1000000000000000000000000000000")) > 0)
+		{
+			return decimal.divide(new BigDecimal("1000000000000000000000000000000"), 3, RoundingMode.CEILING).stripTrailingZeros().toPlainString() + "N";
+		}
+		else if(number.compareTo(new BigInteger("1000000000000000000000000000")) > 0)
+		{
+			return decimal.divide(new BigDecimal("1000000000000000000000000000"), 3, RoundingMode.CEILING).stripTrailingZeros().toPlainString() + "O";
+		}
+		else if(number.compareTo(new BigInteger("1000000000000000000000")) > 0)
 		{
 			return decimal.divide(new BigDecimal("1000000000000000000000"), 3, RoundingMode.CEILING).stripTrailingZeros().toPlainString() + "S";
 		}
@@ -390,5 +464,15 @@ public class ClickToWin extends ApplicationAdapter {
 			return decimal.divide(new BigDecimal("1000000"), 3, RoundingMode.CEILING).stripTrailingZeros().toPlainString() + "M";
 		}
 		return number.toString();
+	}
+
+	public void startOver()
+	{
+		updateEnemy();
+	}
+
+	public SoundSystem getSoundSystem()
+	{
+		return soundSystem;
 	}
 }

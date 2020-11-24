@@ -56,4 +56,10 @@ public class TextureSheet {
     {
         return sheet.getWidth() / indexSize * sheet.getHeight() / indexSize;
     }
+
+    public void dispose()
+    {
+        sheet.dispose();
+        map.dispose();
+    }
 }

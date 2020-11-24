@@ -4,6 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.io.InvalidObjectException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Map;
+
 public class AndroidSaveSystem extends SaveSystem {
 
     private SharedPreferences preferences;
@@ -11,6 +16,7 @@ public class AndroidSaveSystem extends SaveSystem {
     public AndroidSaveSystem(Activity activity)
     {
         preferences = activity.getPreferences(Context.MODE_PRIVATE);
+        preferences.edit().clear().apply();
     }
 
     @Override
@@ -36,7 +42,22 @@ public class AndroidSaveSystem extends SaveSystem {
         {
             editor.putString(key, (String) value);
         }
+        else if(value instanceof BigInteger)
+        {
+            editor.putString(key, (String) value.toString());
+        }
+        else if(value instanceof BigDecimal)
+        {
+            editor.putString(key, (String) value.toString());
+        }
+        System.out.println("Incoming value: " + value + ", type: " + value.getClass());
         editor.apply();
+        System.out.println("Saved values:");
+        Map<String, ?> map = preferences.getAll();
+        for(String keyVal : map.keySet())
+        {
+            System.out.println(keyVal + "=" + map.get(keyVal));
+        }
     }
 
     @Override

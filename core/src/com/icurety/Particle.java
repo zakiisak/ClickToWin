@@ -30,7 +30,8 @@ public class Particle extends Entity {
         velX *= dampFactor;
         velY *= dampFactor;
 
-        if(Math.abs(velX) < 0.01f || Math.abs(velY) < 0.01f)
+        float hypotenuse = (float) Math.sqrt(velX * velX + velY * velY);
+        if(hypotenuse < 0.01f)
         {
             dead = true;
         }

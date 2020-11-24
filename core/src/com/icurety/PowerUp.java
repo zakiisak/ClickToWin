@@ -13,6 +13,7 @@ public class PowerUp extends Entity {
     private static final int SIZE = 384;
 
     private float dx = 10, dy = 30;
+    private boolean firstTick = true;
 
     public PowerUp(ClickToWin ctw)
     {
@@ -24,6 +25,12 @@ public class PowerUp extends Entity {
         ctw.updateDamage(formular(ctw.getDamage()));
     }
 
+    @Override
+    public void onDeath(ClickToWin ctw) {
+        super.onDeath(ctw);
+
+        ctw.getSoundSystem().stopFuzz();
+    }
 
     private static BigInteger formular(BigInteger old)
     {
@@ -34,6 +41,11 @@ public class PowerUp extends Entity {
 
     @Override
     public void tickAndRender(ClickToWin ctw, SpriteBatch batch) {
+        if(firstTick)
+        {
+            ctw.getSoundSystem().playFuzzAndUpgrade();
+            firstTick = false;
+        }
         dy -= GRAVITY;
 
         //spawn particles

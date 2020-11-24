@@ -14,8 +14,27 @@ import java.util.List;
 
 public class Enemy {
     public static final int ENEMY_SIZE = 512;
+    private static final int INVERTED = 8000;
 
-    public static List<Enemy> ENEMIES = new ArrayList<Enemy>();
+    private static List<Enemy> ENEMIES = new ArrayList<Enemy>();
+
+    public static int getEnemyCount()
+    {
+        return ENEMIES.size();
+    }
+
+    public static Enemy get(int index)
+    {
+        int layerNumber = index / ENEMIES.size(); //one layer is already in the inversed, and then plus one, because we
+        Enemy e = ENEMIES.get(index % ENEMIES.size()).cpy();
+        BigInteger lastEnemyHPFactor = ENEMIES.get(ENEMIES.size() - 1).startHp.divide(new BigInteger("100"));
+        for(int i = 0; i < layerNumber; i++)
+        {
+            e.startHp = e.startHp.multiply(lastEnemyHPFactor);
+        }
+        e.hp = e.startHp;
+        return e;
+    }
 
     static {
         ENEMIES.add(new Enemy(16 * 16 + 5, new BigInteger("100")));
@@ -126,12 +145,61 @@ public class Enemy {
         ENEMIES.add(new Enemy(16 * 16 + 3,  new BigInteger("30000000000000000000"))); //pre last fish
 
         //last enemy
-        ENEMIES.add(new Enemy(16 * 16 + 4,  new BigInteger("10000000000000000000000")));
+        ENEMIES.add(new Enemy(16 * 16 + 4,  new BigInteger("10000000000000000000000")).setOnDeathEvent(new OnDeath() {
+            @Override
+            public void onDeath(final ClickToWin ctw) {
+                System.out.println("THIS TOTALLY ABSOLUTELY HAPPENS!");
+                ItemPopup itemPopup = new ItemPopup(ctw, ItemPopup.ITEM_GOLD_MEDAL);
+                itemPopup.setDeathCallback(new Runnable() {
+                    @Override
+                    public void run() {
+                        ctw.updateEnemy();
+                    }
+                });
+                ctw.entities.add(itemPopup);
+            }
+        }));
+
+
+
+        //Add invterted enemies
+
+        List<Enemy> copy = new ArrayList<Enemy>();
+        copy.addAll(ENEMIES);
+        for(int i = 0; i < copy.size(); i++)
+        {
+            Enemy e = copy.get(i);
+            Enemy newE = e.cpy();
+            newE.icon += 8000;
+            BigInteger newHp = newE.startHp.multiply(copy.get(copy.size() - 1).startHp.divide(new BigInteger("100"))); //Multiply with the hp of the final boss from the first section
+            newE.startHp = newHp;
+            newE.hp = newHp;
+            ENEMIES.add(newE);
+        }
+        //Final BOSS
+        ENEMIES.get(ENEMIES.size() - 1).setOnDeathEvent(new OnDeath() {
+            @Override
+            public void onDeath(final ClickToWin ctw) {
+                ItemPopup itemPopup = new ItemPopup(ctw, ItemPopup.ITEM_SUN);
+                itemPopup.setDeathCallback(new Runnable() {
+                    @Override
+                    public void run() {
+                        ctw.win();
+                    }
+                });
+                ctw.entities.add(itemPopup);
+            }
+        });
     }
 
 
     private float x, y;
     public boolean dead = false;
+    private OnDeath onDeath;
+
+    public Enemy setOnDeathEvent(OnDeath onDeath) { this.onDeath = onDeath; return this; }
+    public boolean hasDeathEvent() { return onDeath != null; }
+    public void callDeathEvent(ClickToWin ctw) { onDeath.onDeath(ctw); }
 
     private int icon;
     private BigInteger hp, startHp;
@@ -144,6 +212,21 @@ public class Enemy {
         this.startHp = hp;
     }
 
+    public Enemy(int index)
+    {
+        Enemy copy = get(index).cpy();
+        this.hp = copy.hp;
+        this.startHp = copy.hp;
+        this.icon = copy.icon;
+    }
+
+    public static Enemy getWithHp(int index, BigInteger hp)
+    {
+        Enemy enemy = new Enemy(index);
+        enemy.hp = hp;
+        return enemy;
+    }
+
     public void tickAndRender(SpriteBatch batch)
     {
         overlayColor = overlayColor.lerp(1, 1, 1, 1, 0.05f);
@@ -151,7 +234,10 @@ public class Enemy {
         x = Gdx.graphics.getWidth() / 2 - ENEMY_SIZE / 2;
         y = Gdx.graphics.getHeight() / 2 - ENEMY_SIZE / 2;
         batch.setColor(overlayColor);
-        Icons.draw(batch, icon, x, y, ENEMY_SIZE, ENEMY_SIZE);
+        if(icon >= INVERTED)
+            Icons.drawInverted(batch, icon - INVERTED, x, y, ENEMY_SIZE, ENEMY_SIZE);
+        else
+            Icons.draw(batch, icon, x, y, ENEMY_SIZE, ENEMY_SIZE);
 
         //hp bar
         final float barWidth = ENEMY_SIZE * 1.3f;
@@ -206,12 +292,15 @@ public class Enemy {
 
     public Enemy cpy()
     {
-        return new Enemy(icon, startHp);
+        Enemy enemy = new Enemy(icon, startHp);
+        enemy.onDeath = onDeath;
+        return enemy;
     }
 
     public Enemy cpyWithCurrentHp()
     {
         Enemy enemy = new Enemy(icon, startHp);
+        enemy.onDeath = onDeath;
         enemy.hp = hp;
         return enemy;
     }
@@ -231,4 +320,12 @@ public class Enemy {
         return new BigDecimal(hp).divide(new BigDecimal(startHp), 2, RoundingMode.HALF_UP).floatValue();
     }
 
+    public BigInteger getHp() {
+        return hp;
+    }
+
+    public static interface OnDeath
+    {
+        public void onDeath(ClickToWin ctw);
+    }
 }
