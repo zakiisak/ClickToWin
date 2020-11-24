@@ -34,7 +34,7 @@ public class AndroidAd extends AdManager {
             @Override
             public void run() {
                 Log.i("INFO", "Loading Ads...");
-                ad = new RewardedAd(activity, "ca-app-pub-3940256099942544/5224354917");
+                ad = new RewardedAd(activity, "ca-app-pub-8777726441694445/4591762802");
                 RewardedAdLoadCallback callback = new RewardedAdLoadCallback() {
                     public void onRewardedAdFailedToLoad(LoadAdError var1) {
                         Log.i(TAG, "Failed to load add " + var1);

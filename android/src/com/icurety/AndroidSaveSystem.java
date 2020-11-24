@@ -16,7 +16,6 @@ public class AndroidSaveSystem extends SaveSystem {
     public AndroidSaveSystem(Activity activity)
     {
         preferences = activity.getPreferences(Context.MODE_PRIVATE);
-        preferences.edit().clear().apply();
     }
 
     @Override

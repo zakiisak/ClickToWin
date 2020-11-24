@@ -39,10 +39,12 @@ public abstract class SaveSystem {
 
     public void saveEnemy(String key, int index, Enemy enemy)
     {
-        String result = "";
-        result += index + "@";
-        result += enemy.getHp().toString();
-        save(key, result);
+        if(enemy != null) {
+            String result = "";
+            result += index + "@";
+            result += enemy.getHp().toString();
+            save(key, result);
+        }
     }
 
 

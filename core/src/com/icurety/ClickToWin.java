@@ -31,9 +31,9 @@ public class ClickToWin extends ApplicationAdapter {
 	private BitmapFont font, damageFont, dpsFont;
 	private AdManager adManager;
 	private boolean paused = false;
-	private int enemyIndex = 92;
+	private int enemyIndex = 0;
 	private Enemy currentEnemy;
-	private BigInteger damage = new BigInteger("52345678907765474675234565476457657434567890876543456789876543456789654323456");
+	private BigInteger damage = new BigInteger("5");
 	protected List<Entity> entities = new ArrayList<Entity>();
 	private SaveSystem saveSystem;
 	private SoundSystem soundSystem;
@@ -288,7 +288,6 @@ public class ClickToWin extends ApplicationAdapter {
 	public void pause() {
 		super.pause();
 		disposeGraphics();
-		save();
 	}
 
 	public void spawnPowerUp()
