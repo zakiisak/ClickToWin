@@ -33,6 +33,7 @@ public class AndroidAd extends AdManager {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                //dsajoi
                 Log.i("INFO", "Loading Ads...");
                 ad = new RewardedAd(activity, "ca-app-pub-8777726441694445/4591762802");
                 RewardedAdLoadCallback callback = new RewardedAdLoadCallback() {
