@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Particle extends Entity {
-
+    public static int PARTICLE_COUNT = 0;
     public static final int PARTICLE_INDEX = 15;
 
     private Color color;
@@ -49,4 +49,19 @@ public class Particle extends Entity {
 
     }
 
+    @Override
+    public boolean onSpawn(ClickToWin ctw) {
+        if(PARTICLE_COUNT < 3000)
+        {
+            PARTICLE_COUNT++;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onDeath(ClickToWin ctw) {
+        super.onDeath(ctw);
+        PARTICLE_COUNT--;
+    }
 }

@@ -57,7 +57,7 @@ public class PowerUp extends Entity {
             final float degrees = (float) Math.random() * 360;
             final float dx = (float) (Math.cos(Math.toRadians(degrees)) * Math.random() * maxSpeed);
             final float dy = (float) (Math.sin(Math.toRadians(degrees)) * Math.random() * maxSpeed);
-            ctw.entities.add(new Particle(x, y, new Color(1.0f, 0.75f + (float) Math.random() * 0.125f, 0, 1), dx, dy, dampFactor));
+            ctw.spawn(new Particle(x, y, new Color(1.0f, 0.75f + (float) Math.random() * 0.125f, 0, 1), dx, dy, dampFactor));
         }
 
 

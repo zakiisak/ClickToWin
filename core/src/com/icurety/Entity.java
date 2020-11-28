@@ -23,4 +23,9 @@ public class Entity {
     public void tickAndRender(ClickToWin ctw, SpriteBatch batch)  {}
     public void renderPost(SpriteBatch batch) {}
 
+    public boolean onSpawn(ClickToWin ctw)
+    {
+        return true;
+    }
+
 }

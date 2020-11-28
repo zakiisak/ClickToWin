@@ -13,14 +13,19 @@ public class TextureSheet {
     public int indexSize;
     private final int indexLineWidth;
 
-    public TextureSheet(FileHandle path, int indexSize)
+    public TextureSheet(Pixmap pixmap, int indexSize)
     {
-        map = new Pixmap(path);
+        map = pixmap;
         sheet = new Texture(map);
         sheet.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         sheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         this.indexSize = indexSize;
         indexLineWidth = sheet.getWidth() / indexSize;
+    }
+
+    public TextureSheet(FileHandle path, int indexSize)
+    {
+        this(new Pixmap(path), indexSize);
     }
 
     public void drawIndex(SpriteBatch batch, int index, float x, float y, float width, float height)
@@ -61,5 +66,30 @@ public class TextureSheet {
     {
         sheet.dispose();
         map.dispose();
+    }
+
+    /**
+     * Fills the pixels with aplha value > 0 with the given color.
+     * the alphaSensitivity is how big the alpha value of a pixel should be, for it to be changed and counted.
+     */
+    public static TextureSheet createOpaqueSheet(FileHandle path, Color pixelColor, int indexSize, float alphaSensitivity)
+    {
+        Pixmap map = new Pixmap(path);
+        final Color pixel = new Color();
+        final int w = map.getWidth(), h = map.getHeight();
+        for(int x = 0; x < w; x++)
+        {
+            for(int y = 0; y < h; y++)
+            {
+                Color.rgba8888ToColor(pixel, map.getPixel(x, y));
+                if(pixel.a >= alphaSensitivity)
+                {
+                    pixel.set(pixelColor);
+                    map.drawPixel(x, y, Color.rgba8888(pixel));
+                }
+            }
+        }
+
+        return new TextureSheet(map, indexSize);
     }
 }

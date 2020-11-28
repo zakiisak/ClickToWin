@@ -15,6 +15,12 @@ import java.util.List;
 public class Enemy {
     public static final int ENEMY_SIZE = 512;
     private static final int INVERTED = 8000;
+    private static final Color OVERLAY_COLOR = Color.WHITE.cpy();
+    private static final Color OUTLINE_COLOR = Color.BLACK.cpy();
+    private static final float OUTLINE_WIDTH = 2f;
+    private static final Color SHADOW_COLOR = new Color(0, 0, 0, 0.55f);
+    private static final float SHADOW_X = ENEMY_SIZE / 48;
+    private static final float SHADOW_Y = ENEMY_SIZE / 48;
 
     private static List<Enemy> ENEMIES = new ArrayList<Enemy>();
 
@@ -156,7 +162,7 @@ public class Enemy {
                         ctw.updateEnemy();
                     }
                 });
-                ctw.entities.add(itemPopup);
+                ctw.spawn(itemPopup);
             }
         }));
 
@@ -187,7 +193,7 @@ public class Enemy {
                         ctw.win();
                     }
                 });
-                ctw.entities.add(itemPopup);
+                ctw.spawn(itemPopup);
             }
         });
     }
@@ -203,7 +209,7 @@ public class Enemy {
 
     private int icon;
     private BigInteger hp, startHp;
-    private Color overlayColor = Color.WHITE;
+    private Color overlayColor = new Color(1, 1, 1, 0); //start with not displaying the overlay when the game starts, so therefore an alpha of 0
 
     public Enemy(int icon, BigInteger hp)
     {
@@ -229,15 +235,32 @@ public class Enemy {
 
     public void tickAndRender(SpriteBatch batch)
     {
-        overlayColor = overlayColor.lerp(1, 1, 1, 1, 0.05f);
+        overlayColor.a *= 0.95f;
 
         x = Gdx.graphics.getWidth() / 2 - ENEMY_SIZE / 2;
         y = Gdx.graphics.getHeight() / 2 - ENEMY_SIZE / 2;
-        batch.setColor(overlayColor);
+
+        batch.setColor(SHADOW_COLOR);
+        Icons.drawSolid2(batch, icon, x - SHADOW_X, y, ENEMY_SIZE, ENEMY_SIZE);
+        Icons.drawSolid2(batch, icon, x + SHADOW_X, y, ENEMY_SIZE, ENEMY_SIZE);
+        Icons.drawSolid2(batch, icon, x, y - SHADOW_Y, ENEMY_SIZE, ENEMY_SIZE);
+        Icons.drawSolid2(batch, icon, x, y + SHADOW_Y, ENEMY_SIZE, ENEMY_SIZE);
+
+        batch.setColor(OUTLINE_COLOR);
+        Icons.drawSolid2(batch, icon, x - OUTLINE_WIDTH, y, ENEMY_SIZE, ENEMY_SIZE);
+        Icons.drawSolid2(batch, icon, x + OUTLINE_WIDTH, y, ENEMY_SIZE, ENEMY_SIZE);
+        Icons.drawSolid2(batch, icon, x, y - OUTLINE_WIDTH, ENEMY_SIZE, ENEMY_SIZE);
+        Icons.drawSolid2(batch, icon, x, y + OUTLINE_WIDTH, ENEMY_SIZE, ENEMY_SIZE);
+
+        batch.setColor(1, 1, 1, 1);
         if(icon >= INVERTED)
             Icons.drawInverted(batch, icon - INVERTED, x, y, ENEMY_SIZE, ENEMY_SIZE);
         else
             Icons.draw(batch, icon, x, y, ENEMY_SIZE, ENEMY_SIZE);
+
+        batch.setColor(overlayColor);
+        Icons.drawSolid2(batch, icon, x, y, ENEMY_SIZE, ENEMY_SIZE);
+
 
         //hp bar
         final float barWidth = ENEMY_SIZE * 1.3f;
@@ -245,18 +268,18 @@ public class Enemy {
         final float barX = x + ENEMY_SIZE / 2 -barWidth / 2;
         final float barY = + ENEMY_SIZE * 0.8f;
         batch.setColor(1, 1, 1, 1);
-        Icons.drawSolid(batch, barX - 1, barY - 1, barWidth + 2, barHeight + 2); //white outline
+        Icons.drawSquare(batch, barX - 1, barY - 1, barWidth + 2, barHeight + 2); //white outline
         batch.setColor(0, 0, 0, 0.6f);
-        Icons.drawSolid(batch, barX, barY, barWidth, barHeight);
+        Icons.drawSquare(batch, barX, barY, barWidth, barHeight);
         final float hpPercentage = getHpPercentage();
         batch.setColor(1.0f - hpPercentage, hpPercentage, 0.5f, 1);
-        Icons.drawSolid(batch, barX, barY, barWidth * hpPercentage, barHeight);
+        Icons.drawSquare(batch, barX, barY, barWidth * hpPercentage, barHeight);
         batch.setColor(Color.WHITE);
     }
 
     public void damage(BigInteger amount){
         hp = hp.subtract(amount);
-        overlayColor = Color.RED.cpy();
+        overlayColor = OVERLAY_COLOR.cpy();
         if(hp.compareTo(BigInteger.ZERO) <= 0)
         {
             dead = true;

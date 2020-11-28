@@ -33,8 +33,8 @@ public class ClickToWin extends ApplicationAdapter {
 	private boolean paused = false;
 	private int enemyIndex = 0;
 	private Enemy currentEnemy;
-	private BigInteger damage = new BigInteger("5");
-	protected List<Entity> entities = new ArrayList<Entity>();
+	private BigInteger damage = new BigInteger("360");
+	private List<Entity> entities = new ArrayList<Entity>();
 	private SaveSystem saveSystem;
 	private SoundSystem soundSystem;
 
@@ -138,11 +138,11 @@ public class ClickToWin extends ApplicationAdapter {
 		}
 		if(saveSystem.keyExists(SaveSystem.KEY_ITEM_MEDAL))
 		{
-			entities.add(new ItemPopup(this, ItemPopup.ITEM_GOLD_MEDAL, true));
+			spawn(new ItemPopup(this, ItemPopup.ITEM_GOLD_MEDAL, true));
 		}
 		if(saveSystem.keyExists(SaveSystem.KEY_ITEM_SUN))
 		{
-			entities.add(new ItemPopup(this, ItemPopup.ITEM_SUN, true));
+			spawn(new ItemPopup(this, ItemPopup.ITEM_SUN, true));
 		}
 	}
 
@@ -189,10 +189,10 @@ public class ClickToWin extends ApplicationAdapter {
 	private void createExplosion(Runnable onFinished)
 	{
 		soundSystem.playExplosion();
-		//entities.add(new Flash(Color.WHITE, 60));
+		//spawn(new Flash(Color.WHITE, 60));
 		Explosion explosion = new Explosion(Math.random() > 0.5 ? explosion3 : explosion4, 0, Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		explosion.setDeathCallback(onFinished);
-		entities.add(explosion);
+		spawn(explosion);
 	}
 
 	int x, y;
@@ -292,7 +292,7 @@ public class ClickToWin extends ApplicationAdapter {
 
 	public void spawnPowerUp()
 	{
-		entities.add(new PowerUp(this));
+		spawn(new PowerUp(this));
 	}
 
 	private void spawnRingsOld(float screenX, float screenY)
@@ -311,7 +311,7 @@ public class ClickToWin extends ApplicationAdapter {
 			final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed);
 			float rnd = (float) Math.random();
 			float val = 0.86f + rnd * 0.14f;
-			entities.add(new Particle(screenX, screenY, new Color(val, val, val, 1), dx, dy, dampFactor));
+			spawn(new Particle(screenX, screenY, new Color(val, val, val, 1), dx, dy, dampFactor));
 		}
 		degrees %= 360;
 		int count2 = Math.min(Math.abs(damage.divide(BigInteger.valueOf(1000)).intValue()), 360);
@@ -323,7 +323,7 @@ public class ClickToWin extends ApplicationAdapter {
 				degrees += (360f / (float) count2);
 				final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.8f);
 				final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.8f);
-				entities.add(new Particle(screenX, screenY, new Color(0.5f, 0.5f, 1f, 1), dx, dy, dampFactor));
+				spawn(new Particle(screenX, screenY, new Color(0.5f, 0.5f, 1f, 1), dx, dy, dampFactor));
 			}
 			degrees %= 360;
 
@@ -336,7 +336,7 @@ public class ClickToWin extends ApplicationAdapter {
 					degrees += (360f / (float) count3);
 					final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.6f);
 					final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.6f);
-					entities.add(new Particle(screenX, screenY, new Color(0.5f, 1, 0.5f, 1), dx, dy, dampFactor));
+					spawn(new Particle(screenX, screenY, new Color(0.5f, 1, 0.5f, 1), dx, dy, dampFactor));
 				}
 				degrees %= 360;
 
@@ -350,7 +350,7 @@ public class ClickToWin extends ApplicationAdapter {
 						degrees += (360f / (float) count4);
 						final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 0.4f);
 						final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 0.4f);
-						entities.add(new Particle(screenX, screenY, new Color(1f, 0.5f, 0.5f, 1), dx, dy, dampFactor));
+						spawn(new Particle(screenX, screenY, new Color(1f, 0.5f, 0.5f, 1), dx, dy, dampFactor));
 					}
 					degrees %= 360;
 
@@ -364,7 +364,7 @@ public class ClickToWin extends ApplicationAdapter {
 							degrees += (360f / (float) count6);
 							final float dx = (float) (Math.cos(Math.toRadians(degrees)) * speed * 1.5f);
 							final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed * 1.5f);
-							entities.add(new Particle(screenX, screenY, new Color(1, 1, 1, 1).fromHsv(degrees % 360, 0.75f, 1.0f), dx, dy, dampFactor));
+							spawn(new Particle(screenX, screenY, new Color(1, 1, 1, 1).fromHsv(degrees % 360, 0.75f, 1.0f), dx, dy, dampFactor));
 						}
 					}
 				}
@@ -385,7 +385,7 @@ public class ClickToWin extends ApplicationAdapter {
 			final float dy = (float) (Math.sin(Math.toRadians(degrees)) * speed);
 			float rnd = (float) Math.random();
 			float val = 0.86f + rnd * 0.14f;
-			entities.add(new Particle(screenX, screenY, new Color(val, val, val, 1), dx, dy, dampFactor));
+			spawn(new Particle(screenX, screenY, new Color(val, val, val, 1), dx, dy, dampFactor));
 		}
 	}
 
@@ -401,7 +401,7 @@ public class ClickToWin extends ApplicationAdapter {
 				currentEnemy.damage(damage);
 				tpsCounter = tpsCounter.add(BigInteger.ONE);
 				soundSystem.playDamage(currentEnemy.getHpPercentage());
-				entities.add(new DamageNumber(damage, damageFont, screenX, screenY));
+				spawn(new DamageNumber(damage, damageFont, screenX, screenY));
 				clickCount = clickCount.add(BigInteger.ONE);
 				//saveSystem.save(SaveSystem.KEY_CLICK_COUNT, clickCount);
 
@@ -463,6 +463,24 @@ public class ClickToWin extends ApplicationAdapter {
 			return decimal.divide(new BigDecimal("1000000"), 3, RoundingMode.CEILING).stripTrailingZeros().toPlainString() + "M";
 		}
 		return number.toString();
+	}
+
+	public void spawn(Entity e)
+	{
+		if(e.onSpawn(this))
+		{
+			entities.add(e);
+		}
+	}
+
+	public List<Entity> getEntities()
+	{
+		return entities;
+	}
+
+	public int getEntityCount()
+	{
+		return entities.size();
 	}
 
 	public void startOver()

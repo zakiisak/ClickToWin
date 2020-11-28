@@ -31,7 +31,7 @@ public class Flash extends Entity {
         float percentage = (float) life / startLife;
         Color c = batch.getColor().cpy();
         batch.setColor(overlayColor.r, overlayColor.g, overlayColor.b, percentage);
-        Icons.drawSolid(batch, 0 - Gdx.graphics.getWidth() / 4, 0 - Gdx.graphics.getHeight() / 4, Gdx.graphics.getWidth() + Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() + Gdx.graphics.getWidth() / 2);
+        Icons.drawSquare(batch, 0 - Gdx.graphics.getWidth() / 4, 0 - Gdx.graphics.getHeight() / 4, Gdx.graphics.getWidth() + Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() + Gdx.graphics.getWidth() / 2);
         batch.setColor(c);
     }
 }
